@@ -65,7 +65,7 @@ export default function ChatWidget() {
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-heading text-sm font-bold">AccredAI Assistant</p>
+                  <p className="font-heading text-sm font-bold">Autoscale AI Assistant</p>
                   <p className="text-[10px] text-muted-foreground">NAAC Expert & App Guide</p>
                 </div>
               </div>
