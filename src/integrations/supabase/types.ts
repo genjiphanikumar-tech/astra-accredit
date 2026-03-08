@@ -494,6 +494,10 @@ export type Database = {
         }
         Returns: boolean
       }
+      setup_institution: {
+        Args: { _naac_id?: string; _name: string }
+        Returns: string
+      }
     }
     Enums: {
       app_role: "admin" | "editor" | "viewer"
