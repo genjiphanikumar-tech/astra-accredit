@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
@@ -6,17 +5,15 @@ import { ArrowRight, Play } from "lucide-react";
 import TypewriterText from "@/components/hero/TypewriterText";
 import StatsCounter from "@/components/hero/StatsCounter";
 import FeatureCards from "@/components/hero/FeatureCards";
-import HeroGlobe from "@/components/3d/HeroGlobe";
+import NeuralNexus from "@/components/hero/NeuralNexus";
 
 export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[sidebar-primary-foreground] text-primary bg-[#e9259b]/80">
-      {/* 3D Globe Background */}
-      <Suspense fallback={null}>
-        <HeroGlobe />
-      </Suspense>
+    <div className="relative min-h-screen overflow-hidden bg-background text-foreground">
+      {/* Neural Nexus Background */}
+      <NeuralNexus />
 
       {/* Gradient overlays */}
       <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-transparent to-background z-[1]" />
