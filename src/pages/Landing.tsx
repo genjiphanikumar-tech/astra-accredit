@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useMemo, useState } from "react";
+import autoscaleLogo from "@/assets/autoscale-logo.png";
 
 /* ─── Custom Gold Cursor ─── */
 function GoldCursor() {
