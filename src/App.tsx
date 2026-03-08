@@ -45,6 +45,7 @@ const App = () => (
               <Route path="/countdown" element={<ProtectedRoute><Countdown /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><ReportsArchive /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
