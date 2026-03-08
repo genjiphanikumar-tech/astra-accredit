@@ -145,6 +145,132 @@ function Atom({ position }: { position: [number, number, number] }) {
   );
 }
 
+function Trophy({ position }: { position: [number, number, number] }) {
+  const groupRef = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (groupRef.current) groupRef.current.rotation.y += delta * 0.4;
+  });
+  return (
+    <Float speed={1.6} rotationIntensity={0.3} floatIntensity={0.6}>
+      <group ref={groupRef} position={position}>
+        {/* Cup */}
+        <mesh position={[0, 0.25, 0]}>
+          <cylinderGeometry args={[0.22, 0.15, 0.4, 16]} />
+          <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} transparent opacity={0.85} />
+        </mesh>
+        {/* Stem */}
+        <mesh position={[0, -0.05, 0]}>
+          <cylinderGeometry args={[0.04, 0.04, 0.2, 8]} />
+          <meshStandardMaterial color="#f59e0b" metalness={0.8} roughness={0.2} transparent opacity={0.8} />
+        </mesh>
+        {/* Base */}
+        <mesh position={[0, -0.2, 0]}>
+          <cylinderGeometry args={[0.18, 0.2, 0.08, 16]} />
+          <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} transparent opacity={0.85} />
+        </mesh>
+        {/* Handles */}
+        {[-1, 1].map((side, i) => (
+          <mesh key={i} position={[side * 0.28, 0.25, 0]} rotation={[0, 0, side * 0.3]}>
+            <torusGeometry args={[0.08, 0.02, 8, 16, Math.PI]} />
+            <meshStandardMaterial color="#f59e0b" metalness={0.9} roughness={0.1} transparent opacity={0.8} />
+          </mesh>
+        ))}
+        {/* Star on top */}
+        <mesh position={[0, 0.5, 0]}>
+          <sphereGeometry args={[0.05, 8, 8]} />
+          <meshStandardMaterial color="#fde68a" emissive="#f59e0b" emissiveIntensity={0.8} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
+function GlobeOrnament({ position }: { position: [number, number, number] }) {
+  const globeRef = useRef<THREE.Group>(null);
+  useFrame((_, delta) => {
+    if (globeRef.current) globeRef.current.rotation.y += delta * 0.25;
+  });
+  return (
+    <Float speed={1.2} rotationIntensity={0.2} floatIntensity={0.4}>
+      <group position={position}>
+        {/* Base */}
+        <mesh position={[0, -0.35, 0]}>
+          <cylinderGeometry args={[0.2, 0.25, 0.08, 16]} />
+          <meshStandardMaterial color="#854d0e" transparent opacity={0.7} roughness={0.4} metalness={0.5} />
+        </mesh>
+        {/* Stand arc */}
+        <mesh position={[0, -0.05, 0]} rotation={[0, 0, 0]}>
+          <torusGeometry args={[0.3, 0.015, 8, 32, Math.PI]} />
+          <meshStandardMaterial color="#854d0e" transparent opacity={0.6} metalness={0.6} />
+        </mesh>
+        {/* Globe sphere */}
+        <group ref={globeRef} position={[0, 0.05, 0]}>
+          <mesh>
+            <sphereGeometry args={[0.25, 24, 24]} />
+            <meshStandardMaterial color="#0ea5e9" transparent opacity={0.5} metalness={0.3} roughness={0.6} />
+          </mesh>
+          {/* Latitude lines */}
+          {[-0.1, 0, 0.1].map((y, i) => (
+            <mesh key={i} position={[0, y, 0]} rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[Math.sqrt(0.0625 - y * y), 0.005, 8, 32]} />
+              <meshStandardMaterial color="#00FFD1" transparent opacity={0.5} />
+            </mesh>
+          ))}
+          {/* Meridian */}
+          <mesh>
+            <torusGeometry args={[0.25, 0.005, 8, 32]} />
+            <meshStandardMaterial color="#00FFD1" transparent opacity={0.5} />
+          </mesh>
+        </group>
+      </group>
+    </Float>
+  );
+}
+
+function Microscope({ position }: { position: [number, number, number] }) {
+  return (
+    <Float speed={1.4} rotationIntensity={0.25} floatIntensity={0.5}>
+      <group position={position} rotation={[0, 0.3, 0]}>
+        {/* Base */}
+        <mesh position={[0, -0.4, 0]}>
+          <boxGeometry args={[0.5, 0.08, 0.3]} />
+          <meshStandardMaterial color="#374151" transparent opacity={0.8} metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Arm (vertical) */}
+        <mesh position={[-0.15, 0, -0.1]}>
+          <boxGeometry args={[0.08, 0.8, 0.08]} />
+          <meshStandardMaterial color="#374151" transparent opacity={0.8} metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Arm (horizontal) */}
+        <mesh position={[0.05, 0.35, -0.1]} rotation={[0, 0, 0.3]}>
+          <boxGeometry args={[0.08, 0.35, 0.08]} />
+          <meshStandardMaterial color="#374151" transparent opacity={0.8} metalness={0.7} roughness={0.3} />
+        </mesh>
+        {/* Eyepiece */}
+        <mesh position={[0.15, 0.5, -0.1]}>
+          <cylinderGeometry args={[0.05, 0.04, 0.15, 12]} />
+          <meshStandardMaterial color="#1f2937" transparent opacity={0.85} metalness={0.8} roughness={0.2} />
+        </mesh>
+        {/* Objective lens */}
+        <mesh position={[0.05, -0.15, -0.1]}>
+          <cylinderGeometry args={[0.03, 0.02, 0.12, 8]} />
+          <meshStandardMaterial color="#8b5cf6" transparent opacity={0.7} metalness={0.6} />
+        </mesh>
+        {/* Stage */}
+        <mesh position={[0.05, -0.25, -0.1]}>
+          <boxGeometry args={[0.25, 0.03, 0.25]} />
+          <meshStandardMaterial color="#4b5563" transparent opacity={0.7} metalness={0.5} />
+        </mesh>
+        {/* Lens glow */}
+        <mesh position={[0.15, 0.55, -0.1]}>
+          <sphereGeometry args={[0.03, 8, 8]} />
+          <meshStandardMaterial color="#8b5cf6" emissive="#8b5cf6" emissiveIntensity={0.6} />
+        </mesh>
+      </group>
+    </Float>
+  );
+}
+
 function FloatingParticles() {
   const ref = useRef<THREE.Points>(null);
   const positions = useMemo(() => {
@@ -194,6 +320,9 @@ export default function HeroGlobe() {
         <Pencil position={[-1.8, 1.2, -0.3]} rotation={[0.3, 0, -0.6]} />
         <Atom position={[1, -1.8, 0.5]} />
         <Atom position={[-1.2, 1.8, -0.3]} />
+        <Trophy position={[-0.5, -1.8, 0.3]} />
+        <GlobeOrnament position={[2, -1.5, 0.5]} />
+        <Microscope position={[-2.5, -0.5, 0.8]} />
         <FloatingParticles />
       </Canvas>
     </div>
