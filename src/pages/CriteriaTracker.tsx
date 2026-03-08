@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2, ChevronDown, ChevronRight, Settings2 } from "lucide-react";
 import { useInstitution } from "@/hooks/useInstitution";
 import { useCriteria } from "@/hooks/useCriteria";
 import { useKeyIndicators } from "@/hooks/useKeyIndicators";
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; class: string; label: string }> = {
   compliant: { icon: CheckCircle, class: "status-compliant", label: "Compliant" },
