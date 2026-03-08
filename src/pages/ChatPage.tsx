@@ -49,7 +49,7 @@ export default function ChatPage() {
               <Bot className="h-16 w-16 text-primary/20 mx-auto" />
               <h3 className="font-heading text-lg font-bold">How can I help?</h3>
               <p className="text-sm text-muted-foreground max-w-md mx-auto">
-                I can answer questions about NAAC criteria, help you prepare evidence, suggest improvements, and guide you through AccredAI features.
+                I can answer questions about NAAC criteria, help you prepare evidence, suggest improvements, and guide you through Autoscale AI features.
               </p>
               <div className="flex flex-wrap gap-2 justify-center max-w-lg mx-auto">
                 {[
