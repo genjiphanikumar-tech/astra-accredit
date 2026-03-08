@@ -301,6 +301,18 @@ export default function CriteriaTracker() {
     }
   };
 
+  const handleKiFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && uploadingKiId) {
+      kiUploadMutation.mutate({ files: e.target.files, kiId: uploadingKiId });
+      e.target.value = "";
+    }
+  };
+
+  const triggerKiUpload = (kiId: string) => {
+    setUploadingKiId(kiId);
+    setTimeout(() => kiFileInputRef.current?.click(), 0);
+  };
+
   if (criteriaLoading) {
     return (
       <DashboardLayout title="NAAC Criteria Tracker">
