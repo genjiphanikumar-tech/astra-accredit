@@ -18,6 +18,8 @@ import TaskManagement from "./pages/TaskManagement";
 import Countdown from "./pages/Countdown";
 import ReportsArchive from "./pages/ReportsArchive";
 import SettingsPage from "./pages/SettingsPage";
+import ChatPage from "./pages/ChatPage";
+import ChatWidget from "./components/chat/ChatWidget";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,9 +45,11 @@ const App = () => (
               <Route path="/countdown" element={<ProtectedRoute><Countdown /></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><ReportsArchive /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
+          <ChatWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Database, ClipboardCheck, Search, FileText,
-  ListTodo, Clock, Archive, Settings, Home
+  ListTodo, Clock, Archive, Settings, Home, Bot
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
@@ -19,6 +19,7 @@ const mainItems = [
   { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Countdown", url: "/countdown", icon: Clock },
   { title: "Reports", url: "/reports", icon: Archive },
+  { title: "AI Assistant", url: "/chat", icon: Bot },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
