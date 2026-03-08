@@ -52,6 +52,8 @@ export default function CriteriaTracker() {
   const [requiredCount, setRequiredCount] = useState("");
   const [settingsError, setSettingsError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const kiFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingKiId, setUploadingKiId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const activeCriterion = criteria?.find(c => c.criterion_number === active);
