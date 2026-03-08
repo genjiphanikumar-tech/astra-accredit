@@ -1,7 +1,10 @@
 import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import DashboardSidebar from "./DashboardSidebar";
-import { Bell, User } from "lucide-react";
+import { Bell, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useNavigate } from "react-router-dom";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -9,6 +12,16 @@ interface DashboardLayoutProps {
 }
 
 export default function DashboardLayout({ children, title }: DashboardLayoutProps) {
+  const { profile, signOut } = useAuth();
+  const { data: notifications } = useNotifications();
+  const navigate = useNavigate();
+  const unreadCount = notifications?.filter(n => !n.is_read).length ?? 0;
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate("/auth");
+  };
+
   return (
     <SidebarProvider>
       <div className="min-h-screen flex w-full bg-background">
@@ -24,12 +37,27 @@ export default function DashboardLayout({ children, title }: DashboardLayoutProp
               )}
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground">
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground relative">
                 <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-primary text-[10px] font-bold flex items-center justify-center text-primary-foreground">
+                    {unreadCount > 9 ? "9+" : unreadCount}
+                  </span>
+                )}
               </Button>
-              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center">
-                <User className="h-4 w-4 text-muted-foreground" />
+              <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-foreground" onClick={handleSignOut} title="Sign out">
+                <LogOut className="h-4 w-4" />
+              </Button>
+              <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center" title={profile?.display_name ?? "User"}>
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="" className="h-8 w-8 rounded-full object-cover" />
+                ) : (
+                  <User className="h-4 w-4 text-muted-foreground" />
+                )}
               </div>
+              {profile?.display_name && (
+                <span className="text-xs text-muted-foreground hidden md:inline">{profile.display_name}</span>
+              )}
             </div>
           </header>
           <main className="flex-1 overflow-auto p-4 md:p-6">

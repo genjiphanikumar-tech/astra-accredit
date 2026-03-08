@@ -4,7 +4,11 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
+import { AuthProvider } from "@/contexts/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 import Landing from "./pages/Landing";
+import Auth from "./pages/Auth";
+import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
 import DataSources from "./pages/DataSources";
 import CriteriaTracker from "./pages/CriteriaTracker";
@@ -20,27 +24,31 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Landing />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/data-sources" element={<DataSources />} />
-            <Route path="/criteria" element={<CriteriaTracker />} />
-            <Route path="/gap-analysis" element={<GapAnalysis />} />
-            <Route path="/sar-generator" element={<SARGenerator />} />
-            <Route path="/tasks" element={<TaskManagement />} />
-            <Route path="/countdown" element={<Countdown />} />
-            <Route path="/reports" element={<ReportsArchive />} />
-            <Route path="/settings" element={<SettingsPage />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route path="/" element={<Landing />} />
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
+              <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
+              <Route path="/data-sources" element={<ProtectedRoute><DataSources /></ProtectedRoute>} />
+              <Route path="/criteria" element={<ProtectedRoute><CriteriaTracker /></ProtectedRoute>} />
+              <Route path="/gap-analysis" element={<ProtectedRoute><GapAnalysis /></ProtectedRoute>} />
+              <Route path="/sar-generator" element={<ProtectedRoute><SARGenerator /></ProtectedRoute>} />
+              <Route path="/tasks" element={<ProtectedRoute><TaskManagement /></ProtectedRoute>} />
+              <Route path="/countdown" element={<ProtectedRoute><Countdown /></ProtectedRoute>} />
+              <Route path="/reports" element={<ProtectedRoute><ReportsArchive /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><SettingsPage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
