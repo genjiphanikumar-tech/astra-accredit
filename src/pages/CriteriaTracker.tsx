@@ -521,9 +521,62 @@ export default function CriteriaTracker() {
                                   </span>
                                 </div>
                               </div>
-                              <p className="mt-3 text-xs text-muted-foreground">
-                                Upload evidence specifically for this key indicator to track detailed progress.
-                              </p>
+
+                              {/* Per-KI upload button */}
+                              {canEdit && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-3 gap-2 text-xs"
+                                  onClick={() => triggerKiUpload(ki.id)}
+                                  disabled={kiUploadMutation.isPending && uploadingKiId === ki.id}
+                                >
+                                  {kiUploadMutation.isPending && uploadingKiId === ki.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-3 w-3" />
+                                  )}
+                                  Upload to {ki.indicator_code}
+                                </Button>
+                              )}
+
+                              {/* Per-KI evidence list */}
+                              {(() => {
+                                const kiFiles = getKiEvidence(ki.id);
+                                if (kiFiles.length === 0) return (
+                                  <p className="mt-2 text-xs text-muted-foreground italic">No evidence uploaded for this indicator yet.</p>
+                                );
+                                return (
+                                  <div className="mt-3 space-y-1.5">
+                                    {kiFiles.map((file: any) => (
+                                      <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-background/50 border border-border/50">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <FileText className="h-3 w-3 text-primary shrink-0" />
+                                          <a
+                                            href={file.file_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs font-medium text-foreground hover:text-primary truncate"
+                                          >
+                                            {file.file_name}
+                                          </a>
+                                        </div>
+                                        {canEdit && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                            onClick={() => deleteMutation.mutate(file.id)}
+                                            disabled={deleteMutation.isPending}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </CollapsibleContent>
                         </div>
