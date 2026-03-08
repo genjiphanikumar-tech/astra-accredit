@@ -320,6 +320,9 @@ export default function HeroGlobe() {
         <Pencil position={[-1.8, 1.2, -0.3]} rotation={[0.3, 0, -0.6]} />
         <Atom position={[1, -1.8, 0.5]} />
         <Atom position={[-1.2, 1.8, -0.3]} />
+        <Trophy position={[-0.5, -1.8, 0.3]} />
+        <GlobeOrnament position={[2, -1.5, 0.5]} />
+        <Microscope position={[-2.5, -0.5, 0.8]} />
         <FloatingParticles />
       </Canvas>
     </div>
