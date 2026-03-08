@@ -11,7 +11,13 @@ export default function ChatWidget() {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const { messages, isLoading, send, stop, clear } = useChat();
+  const { user } = useAuth();
+  const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Hide on chat page, auth, landing, or when not logged in
+  const hiddenPaths = ["/chat", "/auth", "/reset-password", "/"];
+  if (!user || hiddenPaths.includes(location.pathname)) return null;
 
   useEffect(() => {
     if (scrollRef.current) {
