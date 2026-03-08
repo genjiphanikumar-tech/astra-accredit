@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Database, ClipboardCheck, Search, FileText,
-  ListTodo, Clock, Archive, Settings, Home
+  ListTodo, Clock, Archive, Settings, Home, Bot
 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
