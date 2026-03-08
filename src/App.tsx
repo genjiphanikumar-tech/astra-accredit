@@ -21,6 +21,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ChatPage from "./pages/ChatPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import NotFound from "./pages/NotFound";
+import Documentation from "./pages/Documentation";
 
 const queryClient = new QueryClient();
 
