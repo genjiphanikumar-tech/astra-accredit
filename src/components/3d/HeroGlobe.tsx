@@ -164,9 +164,7 @@ function ConnectionLines() {
         const pts = curve.getPoints(20);
         const geometry = new THREE.BufferGeometry().setFromPoints(pts);
         return (
-          <line key={i} geometry={geometry}>
-            <lineBasicMaterial color="#00FFD1" transparent opacity={0.15} />
-          </line>
+          <primitive key={i} object={new THREE.Line(geometry, new THREE.LineBasicMaterial({ color: "#00FFD1", transparent: true, opacity: 0.15 }))} />
         );
       })}
     </group>
