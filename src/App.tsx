@@ -49,6 +49,7 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </AnimatePresence>
+          <ChatWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>

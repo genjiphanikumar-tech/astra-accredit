@@ -19,6 +19,7 @@ const mainItems = [
   { title: "Tasks", url: "/tasks", icon: ListTodo },
   { title: "Countdown", url: "/countdown", icon: Clock },
   { title: "Reports", url: "/reports", icon: Archive },
+  { title: "AI Assistant", url: "/chat", icon: Bot },
   { title: "Settings", url: "/settings", icon: Settings },
 ];
 
