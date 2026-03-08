@@ -62,7 +62,7 @@ export default function CriteriaTracker() {
   // Fetch key indicators for active criterion
   const { data: keyIndicators, isLoading: kiLoading } = useKeyIndicators(activeCriterion?.id);
 
-  // Fetch evidence files for active criterion
+  // Fetch evidence files for active criterion (all, including per-KI)
   const { data: evidenceFiles, isLoading: evidenceLoading } = useQuery({
     queryKey: ["evidence", activeCriterion?.id],
     enabled: !!activeCriterion?.id,
@@ -76,6 +76,10 @@ export default function CriteriaTracker() {
       return data ?? [];
     },
   });
+
+  // Helper: get evidence files for a specific KI
+  const getKiEvidence = (kiId: string) =>
+    evidenceFiles?.filter((f: any) => f.key_indicator_id === kiId) ?? [];
 
   const toggleKI = (kiId: string) => {
     setExpandedKIs(prev => {
