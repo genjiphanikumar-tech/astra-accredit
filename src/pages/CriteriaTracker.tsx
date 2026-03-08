@@ -2,14 +2,17 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2 } from "lucide-react";
+import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
 import { useInstitution } from "@/hooks/useInstitution";
 import { useCriteria } from "@/hooks/useCriteria";
+import { useKeyIndicators } from "@/hooks/useKeyIndicators";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Progress } from "@/components/ui/progress";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; class: string; label: string }> = {
   compliant: { icon: CheckCircle, class: "status-compliant", label: "Compliant" },
@@ -25,15 +28,26 @@ function getStatus(pct: number) {
   return "not_started";
 }
 
+function getStatusColor(pct: number) {
+  if (pct >= 75) return "hsl(142,76%,50%)";
+  if (pct >= 40) return "hsl(40,100%,55%)";
+  if (pct > 0) return "hsl(0,84%,60%)";
+  return "hsl(var(--muted-foreground))";
+}
+
 export default function CriteriaTracker() {
   const { user } = useAuth();
   const { data: institution } = useInstitution();
   const { data: criteria, isLoading: criteriaLoading } = useCriteria(institution?.id);
   const [active, setActive] = useState(1);
+  const [expandedKIs, setExpandedKIs] = useState<Set<string>>(new Set());
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const activeCriterion = criteria?.find(c => c.criterion_number === active);
+  
+  // Fetch key indicators for active criterion
+  const { data: keyIndicators, isLoading: kiLoading } = useKeyIndicators(activeCriterion?.id);
 
   // Fetch evidence files for active criterion
   const { data: evidenceFiles, isLoading: evidenceLoading } = useQuery({
@@ -49,6 +63,15 @@ export default function CriteriaTracker() {
       return data ?? [];
     },
   });
+
+  const toggleKI = (kiId: string) => {
+    setExpandedKIs(prev => {
+      const next = new Set(prev);
+      if (next.has(kiId)) next.delete(kiId);
+      else next.add(kiId);
+      return next;
+    });
+  };
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -217,73 +240,173 @@ export default function CriteriaTracker() {
             key={active}
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-6 space-y-5"
+            className="space-y-4"
           >
-            <div className="flex items-center justify-between flex-wrap gap-3">
-              <h2 className="font-heading text-lg font-bold">
-                Criterion {activeCriterion.criterion_number}: {activeCriterion.criterion_name}
-              </h2>
-              <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border ${st.class}`}>
-                <st.icon className="h-3 w-3" /> {st.label}
-              </span>
-            </div>
-
-            {/* Progress */}
-            <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span>Completion</span>
-                <span className="font-heading">{pct}%</span>
+            {/* Main criterion card */}
+            <div className="glass-card p-6 space-y-5">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <h2 className="font-heading text-lg font-bold">
+                  Criterion {activeCriterion.criterion_number}: {activeCriterion.criterion_name}
+                </h2>
+                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border ${st.class}`}>
+                  <st.icon className="h-3 w-3" /> {st.label}
+                </span>
               </div>
-              <div className="h-3 bg-muted rounded-full overflow-hidden">
-                <motion.div
-                  className="h-full rounded-full"
-                  initial={{ width: 0 }}
-                  animate={{ width: `${pct}%` }}
-                  transition={{ duration: 0.8 }}
-                  style={{
-                    background: pct >= 75 ? "hsl(142,76%,50%)" : pct >= 50 ? "hsl(40,100%,55%)" : "hsl(0,84%,60%)",
-                  }}
-                />
-              </div>
-            </div>
 
-            {/* Evidence count + upload */}
-            <div className="flex items-center justify-between">
-              <span className="text-sm text-muted-foreground">
-                Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
-              </span>
+              {/* Progress */}
               <div>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip"
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-                <Button
-                  size="sm"
-                  className="bg-primary text-primary-foreground gap-2"
-                  onClick={() => fileInputRef.current?.click()}
-                  disabled={uploadMutation.isPending}
-                >
-                  {uploadMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Upload className="h-3 w-3" />
-                  )}
-                  {uploadMutation.isPending ? "Uploading..." : "Upload Evidence"}
-                </Button>
+                <div className="flex justify-between text-sm mb-2">
+                  <span>Overall Completion</span>
+                  <span className="font-heading">{pct}%</span>
+                </div>
+                <div className="h-3 bg-muted rounded-full overflow-hidden">
+                  <motion.div
+                    className="h-full rounded-full"
+                    initial={{ width: 0 }}
+                    animate={{ width: `${pct}%` }}
+                    transition={{ duration: 0.8 }}
+                    style={{ background: getStatusColor(pct) }}
+                  />
+                </div>
               </div>
+
+              {/* Evidence count + upload */}
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
+                </span>
+                <div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip"
+                    className="hidden"
+                    onChange={handleFileSelect}
+                  />
+                  <Button
+                    size="sm"
+                    className="bg-primary text-primary-foreground gap-2"
+                    onClick={() => fileInputRef.current?.click()}
+                    disabled={uploadMutation.isPending}
+                  >
+                    {uploadMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin" />
+                    ) : (
+                      <Upload className="h-3 w-3" />
+                    )}
+                    {uploadMutation.isPending ? "Uploading..." : "Upload Evidence"}
+                  </Button>
+                </div>
+              </div>
+            </div>
+
+            {/* Key Indicators Section */}
+            <div className="glass-card p-6 space-y-4">
+              <h3 className="font-heading text-base font-semibold flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary"></span>
+                Key Indicators
+              </h3>
+              
+              {kiLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                  <Skeleton className="h-14 w-full" />
+                </div>
+              ) : !keyIndicators || keyIndicators.length === 0 ? (
+                <p className="text-sm text-muted-foreground italic">No key indicators found for this criterion.</p>
+              ) : (
+                <div className="space-y-3">
+                  {keyIndicators.map((ki) => {
+                    const kiPct = Number(ki.completion_percentage ?? 0);
+                    const kiStatus = getStatus(kiPct);
+                    const KiIcon = statusConfig[kiStatus].icon;
+                    const isExpanded = expandedKIs.has(ki.id);
+
+                    return (
+                      <Collapsible key={ki.id} open={isExpanded} onOpenChange={() => toggleKI(ki.id)}>
+                        <div className="rounded-lg border border-border bg-muted/20 overflow-hidden">
+                          <CollapsibleTrigger asChild>
+                            <button className="w-full p-4 flex items-center gap-4 hover:bg-muted/30 transition-colors text-left">
+                              <div className="shrink-0">
+                                {isExpanded ? (
+                                  <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                                ) : (
+                                  <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className="font-mono text-sm font-semibold text-primary">
+                                    {ki.indicator_code}
+                                  </span>
+                                  <span className="text-sm font-medium truncate">
+                                    {ki.indicator_name}
+                                  </span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                  <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden max-w-xs">
+                                    <div
+                                      className="h-full rounded-full transition-all duration-500"
+                                      style={{ 
+                                        width: `${kiPct}%`,
+                                        background: getStatusColor(kiPct)
+                                      }}
+                                    />
+                                  </div>
+                                  <span className="text-xs text-muted-foreground shrink-0 w-10">
+                                    {kiPct}%
+                                  </span>
+                                </div>
+                              </div>
+                              <div className="shrink-0 flex items-center gap-2">
+                                <span className="text-xs text-muted-foreground">
+                                  Wt: {ki.weightage}%
+                                </span>
+                                <KiIcon className="h-4 w-4" style={{ color: getStatusColor(kiPct) }} />
+                              </div>
+                            </button>
+                          </CollapsibleTrigger>
+                          <CollapsibleContent>
+                            <div className="px-4 pb-4 pt-0 border-t border-border/50">
+                              <div className="mt-3 grid grid-cols-2 gap-4 text-sm">
+                                <div>
+                                  <span className="text-muted-foreground">Evidence:</span>
+                                  <span className="ml-2 font-medium">
+                                    {ki.evidence_count ?? 0} / {ki.required_evidence_count ?? 5}
+                                  </span>
+                                </div>
+                                <div>
+                                  <span className="text-muted-foreground">Status:</span>
+                                  <span className={`ml-2 font-medium capitalize ${statusConfig[kiStatus].class}`}>
+                                    {statusConfig[kiStatus].label}
+                                  </span>
+                                </div>
+                              </div>
+                              <p className="mt-3 text-xs text-muted-foreground">
+                                Upload evidence specifically for this key indicator to track detailed progress.
+                              </p>
+                            </div>
+                          </CollapsibleContent>
+                        </div>
+                      </Collapsible>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Evidence files list */}
-            <div className="space-y-2">
-              <h3 className="text-sm font-semibold text-muted-foreground">Uploaded Evidence</h3>
+            <div className="glass-card p-6 space-y-4">
+              <h3 className="font-heading text-base font-semibold flex items-center gap-2">
+                <FileText className="h-4 w-4 text-primary" />
+                Uploaded Evidence
+              </h3>
               {evidenceLoading ? (
                 <Skeleton className="h-16 w-full" />
               ) : !evidenceFiles || evidenceFiles.length === 0 ? (
-                <p className="text-xs text-muted-foreground italic">No evidence uploaded yet for this criterion.</p>
+                <p className="text-sm text-muted-foreground italic">No evidence uploaded yet for this criterion.</p>
               ) : (
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {evidenceFiles.map(file => (

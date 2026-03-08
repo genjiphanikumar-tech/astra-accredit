@@ -245,6 +245,56 @@ export type Database = {
         }
         Relationships: []
       }
+      key_indicators: {
+        Row: {
+          completion_percentage: number | null
+          created_at: string | null
+          criteria_id: string
+          evidence_count: number | null
+          id: string
+          indicator_code: string
+          indicator_name: string
+          required_evidence_count: number | null
+          status: string | null
+          updated_at: string | null
+          weightage: number | null
+        }
+        Insert: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          criteria_id: string
+          evidence_count?: number | null
+          id?: string
+          indicator_code: string
+          indicator_name: string
+          required_evidence_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          weightage?: number | null
+        }
+        Update: {
+          completion_percentage?: number | null
+          created_at?: string | null
+          criteria_id?: string
+          evidence_count?: number | null
+          id?: string
+          indicator_code?: string
+          indicator_name?: string
+          required_evidence_count?: number | null
+          status?: string | null
+          updated_at?: string | null
+          weightage?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "key_indicators_criteria_id_fkey"
+            columns: ["criteria_id"]
+            isOneToOne: false
+            referencedRelation: "criteria"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       milestones: {
         Row: {
           created_at: string
