@@ -33,7 +33,7 @@ export default function ChatPage() {
               <Bot className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="font-heading text-sm font-bold">AccredAI Assistant</h2>
+              <h2 className="font-heading text-sm font-bold">Autoscale AI Assistant</h2>
               <p className="text-xs text-muted-foreground">NAAC Accreditation Expert & App Guide</p>
             </div>
           </div>
