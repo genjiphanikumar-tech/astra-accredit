@@ -32,7 +32,6 @@ const App = () => (
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <AnimatePresence mode="wait">
             <Routes>
               <Route path="/" element={<Landing />} />
               <Route path="/docs" element={<Documentation />} />
@@ -50,7 +49,6 @@ const App = () => (
               <Route path="/chat" element={<ProtectedRoute><ChatPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </AnimatePresence>
           <ChatWidget />
         </BrowserRouter>
       </TooltipProvider>
