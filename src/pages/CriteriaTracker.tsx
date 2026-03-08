@@ -39,16 +39,23 @@ function getStatusColor(pct: number) {
   return "hsl(var(--muted-foreground))";
 }
 
+// Validation schema
+const requiredEvidenceSchema = z.number().int().min(1, "Must be at least 1").max(100, "Must be at most 100");
+
 export default function CriteriaTracker() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: institution } = useInstitution();
   const { data: criteria, isLoading: criteriaLoading } = useCriteria(institution?.id);
   const [active, setActive] = useState(1);
   const [expandedKIs, setExpandedKIs] = useState<Set<string>>(new Set());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [requiredCount, setRequiredCount] = useState("");
+  const [settingsError, setSettingsError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const activeCriterion = criteria?.find(c => c.criterion_number === active);
+  const canEdit = role === "admin" || role === "editor";
   
   // Fetch key indicators for active criterion
   const { data: keyIndicators, isLoading: kiLoading } = useKeyIndicators(activeCriterion?.id);
@@ -76,6 +83,42 @@ export default function CriteriaTracker() {
       return next;
     });
   };
+
+  const openSettings = () => {
+    setRequiredCount(String(activeCriterion?.required_evidence_count ?? 10));
+    setSettingsError("");
+    setSettingsOpen(true);
+  };
+
+  // Update required evidence mutation
+  const updateRequiredMutation = useMutation({
+    mutationFn: async (newRequired: number) => {
+      if (!activeCriterion) throw new Error("No criterion selected");
+      
+      const currentEvidence = activeCriterion.evidence_count ?? 0;
+      const newPct = Math.min(100, Math.round((currentEvidence / newRequired) * 100));
+      
+      const { error } = await supabase
+        .from("criteria")
+        .update({
+          required_evidence_count: newRequired,
+          completion_percentage: newPct,
+          status: getStatus(newPct),
+        })
+        .eq("id", activeCriterion.id);
+      
+      if (error) throw error;
+      return newRequired;
+    },
+    onSuccess: (newRequired) => {
+      toast.success(`Required evidence updated to ${newRequired}`);
+      queryClient.invalidateQueries({ queryKey: ["criteria"] });
+      setSettingsOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Update failed: ${err.message}`);
+    },
+  });
 
   // Upload mutation
   const uploadMutation = useMutation({
