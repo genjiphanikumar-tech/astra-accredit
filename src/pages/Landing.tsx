@@ -462,7 +462,7 @@ export default function Landing() {
         background: "rgba(8,6,20,0.88)", backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(255,180,50,0.12)",
       }}>
-        <span className="font-logo text-[17px] tracking-[6px] text-white">ACCR<span style={{ color: "#FFB432" }}>ED</span>AI</span>
+        <span className="font-logo text-[17px] tracking-[6px] text-white">AUTO <span style={{ color: "#FFB432" }}>SCALE</span> AI</span>
         <div className="hidden md:flex items-center gap-8">
           {["Features", "How It Works", "Colleges", "Pricing"].map(l => (
             <a key={l} className="font-code text-[11px] tracking-[2px] transition-colors duration-300 cursor-pointer" style={{ color: "rgba(255,255,255,0.35)" }}
