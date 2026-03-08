@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useEffect, useRef, useMemo, useState } from "react";
+import autoscaleLogo from "@/assets/autoscale-logo.png";
 
 /* ─── Custom Gold Cursor ─── */
 function GoldCursor() {
@@ -462,7 +463,10 @@ export default function Landing() {
         background: "rgba(8,6,20,0.88)", backdropFilter: "blur(20px)",
         borderBottom: "1px solid rgba(255,180,50,0.12)",
       }}>
-        <span className="font-logo text-[17px] tracking-[6px] text-white">AUTO<span style={{ color: "#FFB432" }}>SCALE</span> AI</span>
+        <div className="flex items-center gap-2.5">
+          <img src={autoscaleLogo} alt="Autoscale AI" className="h-8 w-8" />
+          <span className="font-logo text-[15px] tracking-[4px] text-white">AUTO<span style={{ color: "#FFB432" }}>SCALE</span></span>
+        </div>
         <div className="hidden md:flex items-center gap-8">
           {["Features", "How It Works", "Colleges", "Pricing"].map(l => (
             <a key={l} className="font-code text-[11px] tracking-[2px] transition-colors duration-300 cursor-pointer" style={{ color: "rgba(255,255,255,0.35)" }}
@@ -651,7 +655,10 @@ export default function Landing() {
       <footer className="flex items-center justify-between px-6 md:px-12 py-6" style={{
         borderTop: "1px solid rgba(255,255,255,0.06)", background: "rgba(0,0,0,0.3)",
       }}>
-        <span className="font-logo text-[14px] tracking-[4px] text-white">AUTO<span style={{ color: "#FFB432" }}>SCALE</span> AI</span>
+        <div className="flex items-center gap-2">
+          <img src={autoscaleLogo} alt="Autoscale AI" className="h-6 w-6" />
+          <span className="font-logo text-[12px] tracking-[3px] text-white">AUTO<span style={{ color: "#FFB432" }}>SCALE</span></span>
+        </div>
         <span className="font-code text-[10px] tracking-[2px]" style={{ color: "rgba(255,255,255,0.2)" }}>
           © 2025 AUTOSCALE AI · ACCREDITATION INTELLIGENCE PLATFORM
         </span>
