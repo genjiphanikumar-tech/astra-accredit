@@ -1,1 +1,4 @@
 project_id = "hwalsetsreiigvbhncpn"
+
+[functions.generate-sar]
+verify_jwt = false
