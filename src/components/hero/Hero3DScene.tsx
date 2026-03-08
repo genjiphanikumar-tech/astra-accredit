@@ -1,286 +1,259 @@
-import { useRef, useMemo, useState } from "react";
+import { useRef, useMemo } from "react";
 import { Canvas, useFrame } from "@react-three/fiber";
 import { Float, Environment } from "@react-three/drei";
 import * as THREE from "three";
 
-/* ─── Bookshelf ─── */
-function Bookshelf({ position, rotation }: { position: [number, number, number]; rotation?: [number, number, number] }) {
-  const shelfColor = "#3b2314";
-  const shelfW = 3.2;
-  const shelfH = 5;
-  const shelfD = 0.7;
-  const shelves = 5;
-
-  const bookColors = useMemo(() => {
-    const palette = ["#8b1a1a", "#1a3c5e", "#2e4a1e", "#5c3317", "#4a1942", "#1a4a4a", "#6b3a00", "#2b1055", "#5e1a1a", "#1a5e3a"];
-    return Array.from({ length: 40 }, () => palette[Math.floor(Math.random() * palette.length)]);
-  }, []);
-
-  return (
-    <group position={position} rotation={rotation}>
-      {/* Back panel */}
-      <mesh position={[0, shelfH / 2, -shelfD / 2]}>
-        <boxGeometry args={[shelfW, shelfH, 0.08]} />
-        <meshStandardMaterial color="#2a1a0a" roughness={0.9} />
-      </mesh>
-      {/* Side panels */}
-      {[-1, 1].map((side) => (
-        <mesh key={side} position={[side * (shelfW / 2 - 0.05), shelfH / 2, -shelfD / 4]}>
-          <boxGeometry args={[0.1, shelfH, shelfD]} />
-          <meshStandardMaterial color={shelfColor} roughness={0.7} metalness={0.1} />
-        </mesh>
-      ))}
-      {/* Shelf boards + books */}
-      {Array.from({ length: shelves }).map((_, i) => {
-        const y = (i / (shelves - 1)) * (shelfH - 0.3) + 0.15;
-        return (
-          <group key={i}>
-            <mesh position={[0, y, -shelfD / 4]}>
-              <boxGeometry args={[shelfW - 0.1, 0.08, shelfD]} />
-              <meshStandardMaterial color={shelfColor} roughness={0.7} metalness={0.1} />
-            </mesh>
-            {/* Books on shelf */}
-            {i < shelves - 1 && (
-              <BooksRow y={y + 0.04} width={shelfW - 0.3} depth={shelfD} colors={bookColors} rowIndex={i} />
-            )}
-          </group>
-        );
-      })}
-      {/* Top crown */}
-      <mesh position={[0, shelfH + 0.08, -shelfD / 4]}>
-        <boxGeometry args={[shelfW + 0.1, 0.16, shelfD + 0.1]} />
-        <meshStandardMaterial color="#4a2a12" roughness={0.6} metalness={0.15} />
-      </mesh>
-    </group>
-  );
-}
-
-function BooksRow({ y, width, depth, colors, rowIndex }: { y: number; width: number; depth: number; colors: string[]; rowIndex: number }) {
-  const books = useMemo(() => {
-    const arr: { x: number; w: number; h: number; color: string; tilt: number }[] = [];
-    let x = -width / 2 + 0.05;
-    let idx = rowIndex * 8;
-    while (x < width / 2 - 0.1) {
-      const w = 0.08 + Math.random() * 0.12;
-      const h = 0.5 + Math.random() * 0.4;
-      const tilt = Math.random() > 0.85 ? (Math.random() - 0.5) * 0.15 : 0;
-      arr.push({ x: x + w / 2, w, h, color: colors[idx % colors.length], tilt });
-      x += w + 0.01;
-      idx++;
-    }
-    return arr;
-  }, [width, colors, rowIndex]);
-
-  return (
-    <group>
-      {books.map((b, i) => (
-        <mesh key={i} position={[b.x, y + b.h / 2, -depth / 4]} rotation={[0, 0, b.tilt]}>
-          <boxGeometry args={[b.w, b.h, 0.45]} />
-          <meshStandardMaterial color={b.color} roughness={0.85} metalness={0.05} />
-        </mesh>
-      ))}
-    </group>
-  );
-}
-
-/* ─── Chandelier ─── */
-function Chandelier() {
-  return (
-    <group position={[0, 5.5, -1]}>
-      {/* Chain */}
-      <mesh position={[0, 1.2, 0]}>
-        <cylinderGeometry args={[0.02, 0.02, 2.4, 8]} />
-        <meshStandardMaterial color="#8b7a3a" metalness={0.9} roughness={0.3} />
-      </mesh>
-      {/* Ring */}
-      <mesh>
-        <torusGeometry args={[1.2, 0.05, 8, 32]} />
-        <meshStandardMaterial color="#b8960c" metalness={0.85} roughness={0.25} />
-      </mesh>
-      {/* Arms & candles */}
-      {Array.from({ length: 8 }).map((_, i) => {
-        const angle = (i / 8) * Math.PI * 2;
-        const x = Math.cos(angle) * 1.2;
-        const z = Math.sin(angle) * 1.2;
-        return (
-          <group key={i} position={[x, 0, z]}>
-            {/* Candle holder */}
-            <mesh position={[0, 0.1, 0]}>
-              <cylinderGeometry args={[0.06, 0.04, 0.2, 8]} />
-              <meshStandardMaterial color="#b8960c" metalness={0.85} roughness={0.3} />
-            </mesh>
-            {/* Candle */}
-            <mesh position={[0, 0.35, 0]}>
-              <cylinderGeometry args={[0.035, 0.04, 0.3, 8]} />
-              <meshStandardMaterial color="#f5e6c8" roughness={0.9} />
-            </mesh>
-            <CandleFlame position={[x, 5.5 + 0.55, z - 1]} index={i} />
-          </group>
-        );
-      })}
-    </group>
-  );
-}
-
-function CandleFlame({ position, index }: { position: [number, number, number]; index: number }) {
-  const ref = useRef<THREE.PointLight>(null);
-  const meshRef = useRef<THREE.Mesh>(null);
+/* ─── Clock Tower ─── */
+function ClockTower() {
+  const minuteRef = useRef<THREE.Mesh>(null);
+  const hourRef = useRef<THREE.Mesh>(null);
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
-    const flicker = 0.7 + 0.3 * Math.sin(t * 8 + index * 2.1) * Math.sin(t * 13 + index * 1.3);
-    if (ref.current) {
-      ref.current.intensity = flicker * 1.5;
-    }
-    if (meshRef.current) {
-      meshRef.current.scale.y = 0.8 + 0.2 * flicker;
-      meshRef.current.scale.x = 0.9 + 0.1 * Math.sin(t * 10 + index);
-    }
+    if (minuteRef.current) minuteRef.current.rotation.z = -t * 0.3;
+    if (hourRef.current) hourRef.current.rotation.z = -t * 0.025;
   });
+
+  return (
+    <group position={[0, 0, -3]}>
+      {/* Base */}
+      <mesh position={[0, 1.5, 0]}>
+        <boxGeometry args={[1.6, 3, 1.6]} />
+        <meshStandardMaterial color="#8b7355" roughness={0.85} />
+      </mesh>
+      {/* Upper section */}
+      <mesh position={[0, 3.8, 0]}>
+        <boxGeometry args={[1.3, 1.6, 1.3]} />
+        <meshStandardMaterial color="#9b8365" roughness={0.8} />
+      </mesh>
+      {/* Clock face */}
+      <mesh position={[0, 3.8, 0.66]}>
+        <circleGeometry args={[0.45, 32]} />
+        <meshStandardMaterial color="#f5e6c8" roughness={0.5} />
+      </mesh>
+      {/* Minute hand */}
+      <mesh ref={minuteRef} position={[0, 3.8, 0.68]}>
+        <boxGeometry args={[0.03, 0.35, 0.02]} />
+        <meshStandardMaterial color="#1a1a1a" />
+      </mesh>
+      {/* Hour hand */}
+      <mesh ref={hourRef} position={[0, 3.8, 0.69]}>
+        <boxGeometry args={[0.04, 0.25, 0.02]} />
+        <meshStandardMaterial color="#1a1a1a" />
+      </mesh>
+      {/* Spire roof */}
+      <mesh position={[0, 5.2, 0]}>
+        <coneGeometry args={[0.8, 1.8, 4]} />
+        <meshStandardMaterial color="#5a3a1a" roughness={0.7} metalness={0.2} />
+      </mesh>
+      {/* Top finial */}
+      <mesh position={[0, 6.2, 0]}>
+        <sphereGeometry args={[0.08, 8, 8]} />
+        <meshStandardMaterial color="#d4a020" metalness={0.9} roughness={0.2} />
+      </mesh>
+      {/* Tower light */}
+      <pointLight position={[0, 4.5, 1]} color="#ffcc66" intensity={2} distance={8} decay={2} />
+    </group>
+  );
+}
+
+/* ─── Building ─── */
+function Building({ position, width, height, depth, color, windowColor, roofColor }: {
+  position: [number, number, number]; width: number; height: number; depth: number;
+  color: string; windowColor?: string; roofColor?: string;
+}) {
+  const wc = windowColor || "#ffd070";
+  const rows = Math.floor(height / 0.7);
+  const cols = Math.floor(width / 0.6);
 
   return (
     <group position={position}>
-      <pointLight ref={ref} color="#ffaa44" intensity={1.5} distance={6} decay={2} />
-      <mesh ref={meshRef} position={[0, 0.04, 0]}>
-        <sphereGeometry args={[0.04, 8, 8]} />
-        <meshBasicMaterial color="#ffcc55" transparent opacity={0.9} />
+      {/* Body */}
+      <mesh position={[0, height / 2, 0]}>
+        <boxGeometry args={[width, height, depth]} />
+        <meshStandardMaterial color={color} roughness={0.85} />
+      </mesh>
+      {/* Roof */}
+      <mesh position={[0, height + 0.15, 0]}>
+        <boxGeometry args={[width + 0.15, 0.3, depth + 0.15]} />
+        <meshStandardMaterial color={roofColor || "#5a4030"} roughness={0.7} />
+      </mesh>
+      {/* Windows */}
+      {Array.from({ length: rows }).map((_, r) =>
+        Array.from({ length: cols }).map((_, c) => {
+          const lit = Math.random() > 0.3;
+          return (
+            <GlowWindow
+              key={`${r}-${c}`}
+              position={[
+                -width / 2 + 0.4 + c * (width - 0.5) / Math.max(cols - 1, 1),
+                0.5 + r * 0.7,
+                depth / 2 + 0.01
+              ]}
+              color={wc}
+              lit={lit}
+            />
+          );
+        })
+      )}
+    </group>
+  );
+}
+
+function GlowWindow({ position, color, lit }: { position: [number, number, number]; color: string; lit: boolean }) {
+  const ref = useRef<THREE.MeshBasicMaterial>(null);
+
+  useFrame((state) => {
+    if (!ref.current || !lit) return;
+    ref.current.opacity = 0.5 + 0.3 * Math.sin(state.clock.elapsedTime * 0.8 + position[0] * 3 + position[1] * 2);
+  });
+
+  return (
+    <mesh position={position}>
+      <planeGeometry args={[0.2, 0.3]} />
+      <meshBasicMaterial
+        ref={ref}
+        color={lit ? color : "#2a2520"}
+        transparent
+        opacity={lit ? 0.7 : 0.3}
+      />
+    </mesh>
+  );
+}
+
+/* ─── Trees ─── */
+function Tree({ position }: { position: [number, number, number] }) {
+  const ref = useRef<THREE.Group>(null);
+  const seed = useMemo(() => Math.random() * 10, []);
+
+  useFrame((state) => {
+    if (!ref.current) return;
+    ref.current.rotation.z = Math.sin(state.clock.elapsedTime * 0.8 + seed) * 0.03;
+    ref.current.rotation.x = Math.sin(state.clock.elapsedTime * 0.6 + seed * 2) * 0.02;
+  });
+
+  const scale = 0.8 + Math.random() * 0.4;
+
+  return (
+    <group position={position} scale={scale}>
+      {/* Trunk */}
+      <mesh position={[0, 0.5, 0]}>
+        <cylinderGeometry args={[0.06, 0.1, 1, 6]} />
+        <meshStandardMaterial color="#5a3a1a" roughness={0.9} />
+      </mesh>
+      {/* Canopy */}
+      <group ref={ref}>
+        <mesh position={[0, 1.3, 0]}>
+          <sphereGeometry args={[0.55, 8, 8]} />
+          <meshStandardMaterial color="#1a4a20" roughness={0.9} />
+        </mesh>
+        <mesh position={[0.2, 1.6, 0.1]}>
+          <sphereGeometry args={[0.35, 8, 8]} />
+          <meshStandardMaterial color="#2a5a2a" roughness={0.9} />
+        </mesh>
+        <mesh position={[-0.15, 1.5, -0.1]}>
+          <sphereGeometry args={[0.4, 8, 8]} />
+          <meshStandardMaterial color="#1e5522" roughness={0.9} />
+        </mesh>
+      </group>
+    </group>
+  );
+}
+
+/* ─── Lamp Post ─── */
+function LampPost({ position }: { position: [number, number, number] }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 0.8, 0]}>
+        <cylinderGeometry args={[0.03, 0.05, 1.6, 6]} />
+        <meshStandardMaterial color="#3a3a3a" metalness={0.8} roughness={0.4} />
+      </mesh>
+      {/* Lamp head */}
+      <mesh position={[0, 1.7, 0]}>
+        <sphereGeometry args={[0.1, 8, 8]} />
+        <meshBasicMaterial color="#ffdd88" transparent opacity={0.9} />
+      </mesh>
+      <pointLight position={[position[0], position[1] + 1.8, position[2]]} color="#ffcc66" intensity={1.2} distance={4} decay={2} />
+    </group>
+  );
+}
+
+/* ─── Pathways ─── */
+function Pathways() {
+  return (
+    <group>
+      {/* Main path */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 1]}>
+        <planeGeometry args={[1.2, 10]} />
+        <meshStandardMaterial color="#c4a882" roughness={0.95} />
+      </mesh>
+      {/* Cross path */}
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, -1]}>
+        <planeGeometry args={[12, 0.8]} />
+        <meshStandardMaterial color="#c4a882" roughness={0.95} />
       </mesh>
     </group>
   );
 }
 
-/* ─── Floating Books (Paper → Digital SAR) ─── */
-function FloatingBook({ position, delay }: { position: [number, number, number]; delay: number }) {
-  const groupRef = useRef<THREE.Group>(null);
-  const matRef = useRef<THREE.MeshStandardMaterial>(null);
-  const glowRef = useRef<THREE.MeshBasicMaterial>(null);
-  const [phase, setPhase] = useState(0);
+/* ─── Graduation Caps ─── */
+function GraduationCap({ startPos, delay }: { startPos: [number, number, number]; delay: number }) {
+  const ref = useRef<THREE.Group>(null);
 
   useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    const cycle = ((t * 0.3 + delay) % 6) / 6; // 0-1 cycle
-
-    if (groupRef.current) {
-      groupRef.current.rotation.y = Math.sin(t * 0.5 + delay) * 0.3;
-      groupRef.current.rotation.x = Math.sin(t * 0.3 + delay * 2) * 0.1 - 0.2;
-    }
-
-    // Transition: 0-0.4 = old paper, 0.4-0.6 = transforming, 0.6-1.0 = digital SAR
-    const newPhase = cycle < 0.4 ? 0 : cycle < 0.6 ? 1 : 2;
-    if (newPhase !== phase) setPhase(newPhase);
-
-    if (matRef.current) {
-      if (cycle < 0.4) {
-        matRef.current.color.setHex(0xd4b896);
-        matRef.current.emissive.setHex(0x000000);
-        matRef.current.emissiveIntensity = 0;
-      } else if (cycle < 0.6) {
-        const blend = (cycle - 0.4) / 0.2;
-        matRef.current.color.lerpColors(new THREE.Color(0xd4b896), new THREE.Color(0x1a3a5e), blend);
-        matRef.current.emissive.setHex(0xfb923c);
-        matRef.current.emissiveIntensity = blend * 0.5;
-      } else {
-        matRef.current.color.setHex(0x0f2a44);
-        matRef.current.emissive.setHex(0xfb923c);
-        matRef.current.emissiveIntensity = 0.3 + 0.15 * Math.sin(t * 3 + delay);
-      }
-    }
-
-    if (glowRef.current) {
-      glowRef.current.opacity = cycle > 0.5 ? Math.min((cycle - 0.5) * 4, 0.6) : 0;
-    }
+    if (!ref.current) return;
+    const t = ((state.clock.elapsedTime * 0.4 + delay) % 5) / 5;
+    // Arc upward
+    ref.current.position.y = startPos[1] + t * 6;
+    ref.current.position.x = startPos[0] + Math.sin(t * Math.PI) * 0.5;
+    ref.current.position.z = startPos[2] + Math.sin(t * Math.PI * 0.7) * 0.3;
+    ref.current.rotation.y = state.clock.elapsedTime * 2 + delay;
+    ref.current.rotation.x = Math.sin(t * Math.PI) * 0.4;
+    // Fade out at top
+    const scale = t > 0.8 ? 1 - (t - 0.8) / 0.2 : Math.min(t * 5, 1);
+    ref.current.scale.setScalar(scale * 0.3);
   });
 
   return (
-    <Float speed={1.5} rotationIntensity={0.2} floatIntensity={1.5} floatingRange={[-0.3, 0.3]}>
-      <group ref={groupRef} position={position}>
-        {/* Book cover */}
-        <mesh>
-          <boxGeometry args={[0.8, 0.05, 1.1]} />
-          <meshStandardMaterial ref={matRef} color="#d4b896" roughness={0.8} metalness={0.1} />
-        </mesh>
-        {/* Pages (left) */}
-        <mesh position={[-0.15, 0.15, 0]} rotation={[0, 0, 0.25]}>
-          <boxGeometry args={[0.35, 0.005, 0.95]} />
-          <meshStandardMaterial color="#f5e6c8" roughness={0.95} />
-        </mesh>
-        {/* Pages (right) */}
-        <mesh position={[0.15, 0.15, 0]} rotation={[0, 0, -0.25]}>
-          <boxGeometry args={[0.35, 0.005, 0.95]} />
-          <meshStandardMaterial color="#f5e6c8" roughness={0.95} />
-        </mesh>
-        {/* Digital glow overlay */}
-        <mesh position={[0, 0.08, 0]}>
-          <boxGeometry args={[0.82, 0.01, 1.12]} />
-          <meshBasicMaterial ref={glowRef} color="#fb923c" transparent opacity={0} />
-        </mesh>
-        {/* SAR hologram lines when digital */}
-        <SARHologramLines position={[0, 0.2, 0]} delay={delay} />
-      </group>
-    </Float>
-  );
-}
-
-function SARHologramLines({ position, delay }: { position: [number, number, number]; delay: number }) {
-  const groupRef = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    const t = state.clock.elapsedTime;
-    const cycle = ((t * 0.3 + delay) % 6) / 6;
-    if (groupRef.current) {
-      groupRef.current.visible = cycle > 0.55;
-      groupRef.current.children.forEach((child, i) => {
-        const lineDelay = cycle - 0.55 - i * 0.03;
-        (child as THREE.Mesh).scale.x = lineDelay > 0 ? Math.min(lineDelay * 10, 1) : 0;
-      });
-    }
-  });
-
-  return (
-    <group ref={groupRef} position={position}>
-      {Array.from({ length: 6 }).map((_, i) => (
-        <mesh key={i} position={[0, i * 0.04, (i - 2.5) * 0.12]}>
-          <boxGeometry args={[0.55, 0.008, 0.005]} />
-          <meshBasicMaterial color={i % 2 === 0 ? "#fb923c" : "#fbbf24"} transparent opacity={0.7} />
-        </mesh>
-      ))}
+    <group ref={ref} position={startPos}>
+      {/* Cap board */}
+      <mesh position={[0, 0.05, 0]}>
+        <boxGeometry args={[0.8, 0.06, 0.8]} />
+        <meshStandardMaterial color="#1a1a2e" roughness={0.6} />
+      </mesh>
+      {/* Cap dome */}
+      <mesh position={[0, -0.05, 0]}>
+        <cylinderGeometry args={[0.3, 0.35, 0.15, 8]} />
+        <meshStandardMaterial color="#1a1a2e" roughness={0.6} />
+      </mesh>
+      {/* Tassel button */}
+      <mesh position={[0, 0.1, 0]}>
+        <sphereGeometry args={[0.04, 6, 6]} />
+        <meshStandardMaterial color="#d4a020" metalness={0.8} roughness={0.3} />
+      </mesh>
     </group>
   );
 }
 
-/* ─── Dust Motes ─── */
-function DustMotes() {
-  const count = 120;
+/* ─── Stars ─── */
+function Stars() {
+  const count = 200;
   const ref = useRef<THREE.Points>(null);
 
-  const { positions, velocities } = useMemo(() => {
-    const pos = new Float32Array(count * 3);
-    const vel = new Float32Array(count * 3);
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
     for (let i = 0; i < count; i++) {
-      pos[i * 3] = (Math.random() - 0.5) * 14;
-      pos[i * 3 + 1] = Math.random() * 8;
-      pos[i * 3 + 2] = (Math.random() - 0.5) * 8 - 2;
-      vel[i * 3] = (Math.random() - 0.5) * 0.003;
-      vel[i * 3 + 1] = 0.001 + Math.random() * 0.003;
-      vel[i * 3 + 2] = (Math.random() - 0.5) * 0.002;
+      arr[i * 3] = (Math.random() - 0.5) * 40;
+      arr[i * 3 + 1] = 6 + Math.random() * 15;
+      arr[i * 3 + 2] = -5 - Math.random() * 20;
     }
-    return { positions: pos, velocities: vel };
+    return arr;
   }, []);
 
-  useFrame(() => {
+  useFrame((state) => {
     if (!ref.current) return;
-    const posArr = ref.current.geometry.attributes.position.array as Float32Array;
-    for (let i = 0; i < count; i++) {
-      posArr[i * 3] += velocities[i * 3];
-      posArr[i * 3 + 1] += velocities[i * 3 + 1];
-      posArr[i * 3 + 2] += velocities[i * 3 + 2];
-      // Reset when too high
-      if (posArr[i * 3 + 1] > 8) {
-        posArr[i * 3 + 1] = 0;
-        posArr[i * 3] = (Math.random() - 0.5) * 14;
-      }
-    }
-    ref.current.geometry.attributes.position.needsUpdate = true;
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.opacity = 0.4 + 0.3 * Math.sin(state.clock.elapsedTime * 0.5);
   });
 
   return (
@@ -288,42 +261,27 @@ function DustMotes() {
       <bufferGeometry>
         <bufferAttribute attach="attributes-position" count={count} array={positions} itemSize={3} />
       </bufferGeometry>
-      <pointsMaterial size={0.03} color="#ffd080" transparent opacity={0.5} sizeAttenuation />
+      <pointsMaterial size={0.05} color="#e8d8ff" transparent opacity={0.5} sizeAttenuation />
     </points>
   );
 }
 
-/* ─── Light Beams ─── */
-function LightBeams() {
-  const ref = useRef<THREE.Group>(null);
-
-  useFrame((state) => {
-    if (!ref.current) return;
-    ref.current.children.forEach((child, i) => {
-      const mesh = child as THREE.Mesh;
-      const mat = mesh.material as THREE.MeshBasicMaterial;
-      mat.opacity = 0.04 + 0.025 * Math.sin(state.clock.elapsedTime * 0.5 + i * 1.5);
-    });
-  });
-
+/* ─── Ground ─── */
+function Ground() {
   return (
-    <group ref={ref}>
-      {[[-2, 0.3], [1.5, -0.2], [4, 0.1]].map(([x, rz], i) => (
-        <mesh key={i} position={[x, 4, -2]} rotation={[0.1, 0, rz]}>
-          <cylinderGeometry args={[0.3, 1.5, 8, 8, 1, true]} />
-          <meshBasicMaterial color="#ffcc66" transparent opacity={0.05} side={THREE.DoubleSide} />
-        </mesh>
-      ))}
-    </group>
+    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+      <planeGeometry args={[30, 30]} />
+      <meshStandardMaterial color="#2a4a1a" roughness={0.95} />
+    </mesh>
   );
 }
 
-/* ─── Floor ─── */
-function Floor() {
+/* ─── Sky Gradient (upper purple) ─── */
+function SkyDome() {
   return (
-    <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.5, -2]}>
-      <planeGeometry args={[20, 15]} />
-      <meshStandardMaterial color="#1a0f08" roughness={0.9} metalness={0.05} />
+    <mesh position={[0, 0, -15]}>
+      <planeGeometry args={[60, 30]} />
+      <meshBasicMaterial color="#1a1030" />
     </mesh>
   );
 }
@@ -333,43 +291,61 @@ export default function Hero3DScene() {
   return (
     <div className="absolute inset-0 z-0">
       <Canvas
-        camera={{ position: [0, 3, 6], fov: 50, near: 0.1, far: 50 }}
+        camera={{ position: [6, 5, 10], fov: 40, near: 0.1, far: 60 }}
         dpr={[1, 1.5]}
         gl={{ antialias: true, alpha: false }}
-        shadows={false}
       >
-        <color attach="background" args={["#0d0805"]} />
-        <fog attach="fog" args={["#0d0805", 8, 22]} />
+        {/* Purple-gold dusk sky */}
+        <color attach="background" args={["#1a1030"]} />
+        <fog attach="fog" args={["#1a1030", 15, 35]} />
 
-        {/* Ambient warm light */}
-        <ambientLight intensity={0.08} color="#ffddaa" />
+        {/* Golden hour lighting */}
+        <ambientLight intensity={0.15} color="#ffd8a0" />
+        <directionalLight position={[-8, 4, 5]} intensity={1.2} color="#ff9944" />
+        <directionalLight position={[5, 8, 3]} intensity={0.3} color="#cc88ff" />
+        <hemisphereLight args={["#cc88ff", "#2a4a1a", 0.2]} />
 
-        {/* Key directional light from upper right (window) */}
-        <directionalLight position={[6, 8, 3]} intensity={0.6} color="#ffd080" />
-        <directionalLight position={[-4, 6, 2]} intensity={0.2} color="#ffaa55" />
+        {/* Ground & Sky */}
+        <Ground />
+        <SkyDome />
+        <Pathways />
 
-        {/* Bookshelves */}
-        <Bookshelf position={[-4.5, -0.5, -4]} rotation={[0, 0.15, 0]} />
-        <Bookshelf position={[4.5, -0.5, -4]} rotation={[0, -0.15, 0]} />
+        {/* Clock Tower (center) */}
+        <ClockTower />
 
-        {/* Chandelier */}
-        <Chandelier />
+        {/* Buildings */}
+        <Building position={[-4.5, 0, -2]} width={2.5} height={2.2} depth={1.8} color="#8b7355" roofColor="#6a4a30" />
+        <Building position={[4.5, 0, -2]} width={3} height={1.8} depth={2} color="#7a6a55" windowColor="#ffbb55" roofColor="#5a4a35" />
+        <Building position={[-3, 0, -5.5]} width={2} height={2.8} depth={1.5} color="#9a8565" roofColor="#7a5a3a" />
+        <Building position={[3.5, 0, -5.5]} width={2.5} height={2.5} depth={1.5} color="#8a7555" roofColor="#6a5035" />
 
-        {/* Floating Books transforming to SAR */}
-        <FloatingBook position={[-1.5, 3, 0]} delay={0} />
-        <FloatingBook position={[1.8, 2.5, -0.5]} delay={2} />
-        <FloatingBook position={[0, 3.8, -1.5]} delay={4} />
+        {/* Trees */}
+        <Tree position={[-2, 0, 0.5]} />
+        <Tree position={[2.2, 0, 0.8]} />
+        <Tree position={[-6, 0, -1]} />
+        <Tree position={[6, 0, -0.5]} />
+        <Tree position={[-1, 0, -6]} />
+        <Tree position={[5.5, 0, -5]} />
+        <Tree position={[-5.5, 0, -5]} />
+        <Tree position={[1.5, 0, -4]} />
 
-        {/* Dust Motes */}
-        <DustMotes />
+        {/* Lamp Posts */}
+        <LampPost position={[-1.5, 0, 1.5]} />
+        <LampPost position={[1.5, 0, 1.5]} />
+        <LampPost position={[-3, 0, -1]} />
+        <LampPost position={[3, 0, -1]} />
 
-        {/* Golden Light Beams */}
-        <LightBeams />
+        {/* Graduation Caps arcing upward */}
+        <GraduationCap startPos={[-0.5, 2, -2]} delay={0} />
+        <GraduationCap startPos={[0.5, 2, -2.5]} delay={1.2} />
+        <GraduationCap startPos={[0, 2.5, -1.5]} delay={2.5} />
+        <GraduationCap startPos={[-1, 2, -3]} delay={3.8} />
+        <GraduationCap startPos={[1.2, 2, -1.8]} delay={0.8} />
 
-        {/* Floor */}
-        <Floor />
+        {/* Stars */}
+        <Stars />
 
-        <Environment preset="apartment" environmentIntensity={0.1} />
+        <Environment preset="sunset" environmentIntensity={0.15} />
       </Canvas>
     </div>
   );
