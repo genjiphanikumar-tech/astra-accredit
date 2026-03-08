@@ -13,15 +13,15 @@ export default function Landing() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[#0a0a0a] text-foreground">
+    <div className="relative min-h-screen overflow-hidden bg-[#0d0805] text-foreground">
       {/* 3D Background */}
-      <Suspense fallback={<div className="absolute inset-0 bg-[#0a0a0a]" />}>
+      <Suspense fallback={<div className="absolute inset-0 bg-[#0d0805]" />}>
         <Hero3DScene />
       </Suspense>
 
       {/* Gradient overlays for readability */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a]/60 via-transparent to-[#0a0a0a]/90 z-[1]" />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#0a0a0a]/40 via-transparent to-[#0a0a0a]/40 z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0d0805]/50 via-transparent to-[#0d0805]/80 z-[1]" />
+      <div className="absolute inset-0 bg-gradient-to-r from-[#0d0805]/30 via-transparent to-[#0d0805]/30 z-[1]" />
 
       {/* Content */}
       <div className="relative z-10 flex flex-col min-h-screen">
