@@ -53,20 +53,29 @@ export default function CriteriaTracker() {
   // Upload mutation
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
-      if (!activeCriterion || !user) throw new Error("Missing context");
+      if (!activeCriterion || !user) throw new Error("Missing context: criterion=" + !!activeCriterion + " user=" + !!user);
+      if (!institution) throw new Error("No institution found");
+
+      console.log("Starting upload for", files.length, "files to criterion", activeCriterion.id);
 
       const uploaded = [];
       for (const file of Array.from(files)) {
-        const filePath = `${institution!.id}/${activeCriterion.id}/${Date.now()}_${file.name}`;
+        const filePath = `${institution.id}/${activeCriterion.id}/${Date.now()}_${file.name}`;
+        console.log("Uploading to storage:", filePath);
+        
         const { error: uploadError } = await supabase.storage
           .from("accreditation-evidence")
           .upload(filePath, file);
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error("Storage upload error:", uploadError);
+          throw uploadError;
+        }
 
         const { data: urlData } = supabase.storage
           .from("accreditation-evidence")
           .getPublicUrl(filePath);
 
+        console.log("Inserting evidence_files record");
         const { error: insertError } = await supabase
           .from("evidence_files")
           .insert({
@@ -76,7 +85,10 @@ export default function CriteriaTracker() {
             file_url: urlData.publicUrl,
             file_type: file.type || "application/octet-stream",
           });
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error("Insert evidence error:", insertError);
+          throw insertError;
+        }
         uploaded.push(file.name);
       }
 
@@ -86,7 +98,7 @@ export default function CriteriaTracker() {
         ? Math.min(100, Math.round((newCount / activeCriterion.required_evidence_count) * 100))
         : 0;
 
-      await supabase
+      const { error: updateError } = await supabase
         .from("criteria")
         .update({
           evidence_count: newCount,
@@ -94,6 +106,10 @@ export default function CriteriaTracker() {
           status: getStatus(newPct),
         })
         .eq("id", activeCriterion.id);
+      
+      if (updateError) {
+        console.error("Criteria update error:", updateError);
+      }
 
       return uploaded;
     },
@@ -103,6 +119,7 @@ export default function CriteriaTracker() {
       queryClient.invalidateQueries({ queryKey: ["criteria"] });
     },
     onError: (err: any) => {
+      console.error("Upload mutation error:", err);
       toast.error(`Upload failed: ${err.message}`);
     },
   });
