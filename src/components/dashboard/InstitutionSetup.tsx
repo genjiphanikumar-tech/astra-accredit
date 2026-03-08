@@ -21,29 +21,17 @@ export default function InstitutionSetup() {
     if (!user) return;
     setSubmitting(true);
 
-    // First, make user an admin so they can insert
-    const { error: roleError } = await supabase
-      .from("user_roles")
-      .update({ role: "admin" })
-      .eq("user_id", user.id);
-
-    if (roleError) {
-      toast({ title: "Error", description: roleError.message, variant: "destructive" });
-      setSubmitting(false);
-      return;
-    }
-
-    const { error } = await supabase.from("institutions").insert({
-      name,
-      naac_id: naacId || null,
-      created_by: user.id,
+    const { error } = await supabase.rpc("setup_institution", {
+      _name: name,
+      _naac_id: naacId || null,
     });
 
     if (error) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
     } else {
-      toast({ title: "Institution created", description: "Your institution is ready." });
+      toast({ title: "Institution created", description: "Your institution is ready with 7 NAAC criteria seeded." });
       queryClient.invalidateQueries({ queryKey: ["institution"] });
+      queryClient.invalidateQueries({ queryKey: ["criteria"] });
     }
     setSubmitting(false);
   };
