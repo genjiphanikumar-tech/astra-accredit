@@ -8,3 +8,6 @@ verify_jwt = false
 
 [functions.analyze-gaps]
 verify_jwt = false
+
+[functions.moodle-sync]
+verify_jwt = false
