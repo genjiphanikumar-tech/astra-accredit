@@ -318,10 +318,23 @@ export default function CriteriaTracker() {
               </div>
 
               {/* Evidence count + upload */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
-                </span>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
+                  </span>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                      onClick={openSettings}
+                      title="Configure required evidence"
+                    >
+                      <Settings2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <div>
                   <input
                     ref={fileInputRef}
