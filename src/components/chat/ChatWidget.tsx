@@ -15,15 +15,15 @@ export default function ChatWidget() {
   const location = useLocation();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  // Hide on chat page, auth, landing, or when not logged in
-  const hiddenPaths = ["/chat", "/auth", "/reset-password", "/"];
-  if (!user || hiddenPaths.includes(location.pathname)) return null;
-
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  // Hide on chat page, auth, landing, or when not logged in
+  const hiddenPaths = ["/chat", "/auth", "/reset-password", "/"];
+  if (!user || hiddenPaths.includes(location.pathname)) return null;
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
