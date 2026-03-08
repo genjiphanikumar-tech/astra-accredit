@@ -13,15 +13,27 @@ export default {
   		}
   	},
   	extend: {
-  		fontFamily: {
-  			heading: [
-  				'Orbitron',
-  				'sans-serif'
-  			],
-  			body: [
-  				'DM Sans',
-  				'sans-serif'
-  			],
+		fontFamily: {
+			heading: [
+				'Orbitron',
+				'sans-serif'
+			],
+			body: [
+				'DM Sans',
+				'sans-serif'
+			],
+			display: [
+				'Playfair Display',
+				'serif'
+			],
+			logo: [
+				'Cinzel',
+				'serif'
+			],
+			code: [
+				'Courier Prime',
+				'monospace'
+			],
   			sans: [
   				'Roboto',
   				'ui-sans-serif',
