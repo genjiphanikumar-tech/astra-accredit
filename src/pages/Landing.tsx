@@ -628,7 +628,7 @@ export default function Landing() {
           Ready to Transform Your <em style={{ color: "#FFB432" }}>Accreditation?</em>
         </h2>
         <p className="font-body text-[16px] max-w-[480px] mx-auto leading-[1.85] mb-10" style={{ color: "rgba(255,255,255,0.42)" }}>
-          Join 250+ institutions already using AccredAI to streamline their NAAC, NBA & ABET compliance.
+          Join 250+ institutions already using Auto Scale AI to streamline their NAAC, NBA & ABET compliance.
         </p>
         <div className="flex flex-col sm:flex-row gap-4 justify-center">
           <button className="relative overflow-hidden font-code text-[14px] font-bold tracking-[1px] px-11 py-4 rounded-full text-black transition-all duration-300 hover:-translate-y-[3px] group" style={{
