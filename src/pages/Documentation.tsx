@@ -250,7 +250,7 @@ export default function Documentation() {
 
         {/* Footer */}
         <footer className="text-center text-sm text-muted-foreground border-t pt-6 mt-12">
-          <p>AccredAI © {new Date().getFullYear()} — AI-Powered Accreditation Excellence</p>
+          <p>Auto Scale AI © {new Date().getFullYear()} — AI-Powered Accreditation Excellence</p>
         </footer>
       </div>
     </div>
