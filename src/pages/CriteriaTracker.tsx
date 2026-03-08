@@ -2,7 +2,7 @@ import DashboardLayout from "@/components/dashboard/DashboardLayout";
 import { motion } from "framer-motion";
 import { useState, useRef } from "react";
 import { Button } from "@/components/ui/button";
-import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2, ChevronDown, ChevronRight } from "lucide-react";
+import { Upload, CheckCircle, AlertTriangle, XCircle, Clock, FileText, Trash2, Loader2, ChevronDown, ChevronRight, Settings2 } from "lucide-react";
 import { useInstitution } from "@/hooks/useInstitution";
 import { useCriteria } from "@/hooks/useCriteria";
 import { useKeyIndicators } from "@/hooks/useKeyIndicators";
@@ -13,6 +13,10 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Progress } from "@/components/ui/progress";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { z } from "zod";
 
 const statusConfig: Record<string, { icon: typeof CheckCircle; class: string; label: string }> = {
   compliant: { icon: CheckCircle, class: "status-compliant", label: "Compliant" },
@@ -35,16 +39,23 @@ function getStatusColor(pct: number) {
   return "hsl(var(--muted-foreground))";
 }
 
+// Validation schema
+const requiredEvidenceSchema = z.number().int().min(1, "Must be at least 1").max(100, "Must be at most 100");
+
 export default function CriteriaTracker() {
-  const { user } = useAuth();
+  const { user, role } = useAuth();
   const { data: institution } = useInstitution();
   const { data: criteria, isLoading: criteriaLoading } = useCriteria(institution?.id);
   const [active, setActive] = useState(1);
   const [expandedKIs, setExpandedKIs] = useState<Set<string>>(new Set());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [requiredCount, setRequiredCount] = useState("");
+  const [settingsError, setSettingsError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const queryClient = useQueryClient();
 
   const activeCriterion = criteria?.find(c => c.criterion_number === active);
+  const canEdit = role === "admin" || role === "editor";
   
   // Fetch key indicators for active criterion
   const { data: keyIndicators, isLoading: kiLoading } = useKeyIndicators(activeCriterion?.id);
@@ -72,6 +83,42 @@ export default function CriteriaTracker() {
       return next;
     });
   };
+
+  const openSettings = () => {
+    setRequiredCount(String(activeCriterion?.required_evidence_count ?? 10));
+    setSettingsError("");
+    setSettingsOpen(true);
+  };
+
+  // Update required evidence mutation
+  const updateRequiredMutation = useMutation({
+    mutationFn: async (newRequired: number) => {
+      if (!activeCriterion) throw new Error("No criterion selected");
+      
+      const currentEvidence = activeCriterion.evidence_count ?? 0;
+      const newPct = Math.min(100, Math.round((currentEvidence / newRequired) * 100));
+      
+      const { error } = await supabase
+        .from("criteria")
+        .update({
+          required_evidence_count: newRequired,
+          completion_percentage: newPct,
+          status: getStatus(newPct),
+        })
+        .eq("id", activeCriterion.id);
+      
+      if (error) throw error;
+      return newRequired;
+    },
+    onSuccess: (newRequired) => {
+      toast.success(`Required evidence updated to ${newRequired}`);
+      queryClient.invalidateQueries({ queryKey: ["criteria"] });
+      setSettingsOpen(false);
+    },
+    onError: (err: any) => {
+      toast.error(`Update failed: ${err.message}`);
+    },
+  });
 
   // Upload mutation
   const uploadMutation = useMutation({
@@ -271,10 +318,23 @@ export default function CriteriaTracker() {
               </div>
 
               {/* Evidence count + upload */}
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-muted-foreground">
-                  Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
-                </span>
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-sm text-muted-foreground">
+                    Evidence: {activeCriterion.evidence_count ?? 0} / {activeCriterion.required_evidence_count ?? 0}
+                  </span>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-7 w-7 p-0 text-muted-foreground hover:text-primary"
+                      onClick={openSettings}
+                      title="Configure required evidence"
+                    >
+                      <Settings2 className="h-3.5 w-3.5" />
+                    </Button>
+                  )}
+                </div>
                 <div>
                   <input
                     ref={fileInputRef}
@@ -448,6 +508,66 @@ export default function CriteriaTracker() {
           </motion.div>
         )}
       </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configure Criterion</DialogTitle>
+            <DialogDescription>
+              Set the required evidence count for Criterion {activeCriterion?.criterion_number}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="requiredCount">Required Evidence Count</Label>
+              <Input
+                id="requiredCount"
+                type="number"
+                min={1}
+                max={100}
+                value={requiredCount}
+                onChange={(e) => {
+                  setRequiredCount(e.target.value);
+                  setSettingsError("");
+                }}
+                placeholder="e.g., 10"
+              />
+              {settingsError && (
+                <p className="text-xs text-destructive">{settingsError}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                The progress percentage will be calculated based on this target.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const parsed = requiredEvidenceSchema.safeParse(Number(requiredCount));
+                if (!parsed.success) {
+                  setSettingsError(parsed.error.errors[0]?.message || "Invalid value");
+                  return;
+                }
+                updateRequiredMutation.mutate(parsed.data);
+              }}
+              disabled={updateRequiredMutation.isPending}
+            >
+              {updateRequiredMutation.isPending ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
