@@ -112,6 +112,7 @@ export type Database = {
           file_type: string | null
           file_url: string
           id: string
+          key_indicator_id: string | null
           uploaded_at: string
           uploaded_by: string
           verified: boolean | null
@@ -122,6 +123,7 @@ export type Database = {
           file_type?: string | null
           file_url: string
           id?: string
+          key_indicator_id?: string | null
           uploaded_at?: string
           uploaded_by: string
           verified?: boolean | null
@@ -132,6 +134,7 @@ export type Database = {
           file_type?: string | null
           file_url?: string
           id?: string
+          key_indicator_id?: string | null
           uploaded_at?: string
           uploaded_by?: string
           verified?: boolean | null
@@ -142,6 +145,13 @@ export type Database = {
             columns: ["criteria_id"]
             isOneToOne: false
             referencedRelation: "criteria"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_files_key_indicator_id_fkey"
+            columns: ["key_indicator_id"]
+            isOneToOne: false
+            referencedRelation: "key_indicators"
             referencedColumns: ["id"]
           },
         ]
