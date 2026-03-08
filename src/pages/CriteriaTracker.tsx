@@ -52,6 +52,8 @@ export default function CriteriaTracker() {
   const [requiredCount, setRequiredCount] = useState("");
   const [settingsError, setSettingsError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const kiFileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingKiId, setUploadingKiId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const activeCriterion = criteria?.find(c => c.criterion_number === active);
@@ -60,7 +62,7 @@ export default function CriteriaTracker() {
   // Fetch key indicators for active criterion
   const { data: keyIndicators, isLoading: kiLoading } = useKeyIndicators(activeCriterion?.id);
 
-  // Fetch evidence files for active criterion
+  // Fetch evidence files for active criterion (all, including per-KI)
   const { data: evidenceFiles, isLoading: evidenceLoading } = useQuery({
     queryKey: ["evidence", activeCriterion?.id],
     enabled: !!activeCriterion?.id,
@@ -74,6 +76,10 @@ export default function CriteriaTracker() {
       return data ?? [];
     },
   });
+
+  // Helper: get evidence files for a specific KI
+  const getKiEvidence = (kiId: string) =>
+    evidenceFiles?.filter((f: any) => f.key_indicator_id === kiId) ?? [];
 
   const toggleKI = (kiId: string) => {
     setExpandedKIs(prev => {
@@ -120,32 +126,24 @@ export default function CriteriaTracker() {
     },
   });
 
-  // Upload mutation
+  // Upload mutation (criterion-level, no KI)
   const uploadMutation = useMutation({
     mutationFn: async (files: FileList) => {
-      if (!activeCriterion || !user) throw new Error("Missing context: criterion=" + !!activeCriterion + " user=" + !!user);
+      if (!activeCriterion || !user) throw new Error("Missing context");
       if (!institution) throw new Error("No institution found");
-
-      console.log("Starting upload for", files.length, "files to criterion", activeCriterion.id);
 
       const uploaded = [];
       for (const file of Array.from(files)) {
         const filePath = `${institution.id}/${activeCriterion.id}/${Date.now()}_${file.name}`;
-        console.log("Uploading to storage:", filePath);
-        
         const { error: uploadError } = await supabase.storage
           .from("accreditation-evidence")
           .upload(filePath, file);
-        if (uploadError) {
-          console.error("Storage upload error:", uploadError);
-          throw uploadError;
-        }
+        if (uploadError) throw uploadError;
 
         const { data: urlData } = supabase.storage
           .from("accreditation-evidence")
           .getPublicUrl(filePath);
 
-        console.log("Inserting evidence_files record");
         const { error: insertError } = await supabase
           .from("evidence_files")
           .insert({
@@ -155,31 +153,19 @@ export default function CriteriaTracker() {
             file_url: urlData.publicUrl,
             file_type: file.type || "application/octet-stream",
           });
-        if (insertError) {
-          console.error("Insert evidence error:", insertError);
-          throw insertError;
-        }
+        if (insertError) throw insertError;
         uploaded.push(file.name);
       }
 
-      // Update evidence count on criteria
       const newCount = (activeCriterion.evidence_count ?? 0) + uploaded.length;
       const newPct = activeCriterion.required_evidence_count
         ? Math.min(100, Math.round((newCount / activeCriterion.required_evidence_count) * 100))
         : 0;
 
-      const { error: updateError } = await supabase
+      await supabase
         .from("criteria")
-        .update({
-          evidence_count: newCount,
-          completion_percentage: newPct,
-          status: getStatus(newPct),
-        })
+        .update({ evidence_count: newCount, completion_percentage: newPct, status: getStatus(newPct) })
         .eq("id", activeCriterion.id);
-      
-      if (updateError) {
-        console.error("Criteria update error:", updateError);
-      }
 
       return uploaded;
     },
@@ -188,8 +174,74 @@ export default function CriteriaTracker() {
       queryClient.invalidateQueries({ queryKey: ["evidence", activeCriterion?.id] });
       queryClient.invalidateQueries({ queryKey: ["criteria"] });
     },
+    onError: (err: any) => toast.error(`Upload failed: ${err.message}`),
+  });
+
+  // Upload mutation for per-KI evidence
+  const kiUploadMutation = useMutation({
+    mutationFn: async ({ files, kiId }: { files: FileList; kiId: string }) => {
+      if (!activeCriterion || !user || !institution) throw new Error("Missing context");
+
+      const ki = keyIndicators?.find(k => k.id === kiId);
+      const uploaded = [];
+      for (const file of Array.from(files)) {
+        const filePath = `${institution.id}/${activeCriterion.id}/${kiId}/${Date.now()}_${file.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("accreditation-evidence")
+          .upload(filePath, file);
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("accreditation-evidence")
+          .getPublicUrl(filePath);
+
+        const { error: insertError } = await supabase
+          .from("evidence_files")
+          .insert({
+            criteria_id: activeCriterion.id,
+            key_indicator_id: kiId,
+            uploaded_by: user.id,
+            file_name: file.name,
+            file_url: urlData.publicUrl,
+            file_type: file.type || "application/octet-stream",
+          });
+        if (insertError) throw insertError;
+        uploaded.push(file.name);
+      }
+
+      // Update KI evidence count
+      if (ki) {
+        const newKiCount = (ki.evidence_count ?? 0) + uploaded.length;
+        const newKiPct = ki.required_evidence_count
+          ? Math.min(100, Math.round((newKiCount / ki.required_evidence_count) * 100))
+          : 0;
+        await supabase
+          .from("key_indicators")
+          .update({ evidence_count: newKiCount, completion_percentage: newKiPct, status: getStatus(newKiPct) })
+          .eq("id", kiId);
+      }
+
+      // Also update parent criterion count
+      const newCount = (activeCriterion.evidence_count ?? 0) + uploaded.length;
+      const newPct = activeCriterion.required_evidence_count
+        ? Math.min(100, Math.round((newCount / activeCriterion.required_evidence_count) * 100))
+        : 0;
+      await supabase
+        .from("criteria")
+        .update({ evidence_count: newCount, completion_percentage: newPct, status: getStatus(newPct) })
+        .eq("id", activeCriterion.id);
+
+      return uploaded;
+    },
+    onSuccess: (names) => {
+      toast.success(`Uploaded ${names.length} file(s) to indicator`);
+      setUploadingKiId(null);
+      queryClient.invalidateQueries({ queryKey: ["evidence", activeCriterion?.id] });
+      queryClient.invalidateQueries({ queryKey: ["criteria"] });
+      queryClient.invalidateQueries({ queryKey: ["key_indicators"] });
+    },
     onError: (err: any) => {
-      console.error("Upload mutation error:", err);
+      setUploadingKiId(null);
       toast.error(`Upload failed: ${err.message}`);
     },
   });
@@ -197,13 +249,31 @@ export default function CriteriaTracker() {
   // Delete evidence mutation
   const deleteMutation = useMutation({
     mutationFn: async (evidenceId: string) => {
+      // Find the file to check if it belongs to a KI
+      const file = evidenceFiles?.find((f: any) => f.id === evidenceId);
+      
       const { error } = await supabase
         .from("evidence_files")
         .delete()
         .eq("id", evidenceId);
       if (error) throw error;
 
-      // Update count
+      // Update KI count if applicable
+      if (file?.key_indicator_id) {
+        const ki = keyIndicators?.find(k => k.id === file.key_indicator_id);
+        if (ki) {
+          const newKiCount = Math.max(0, (ki.evidence_count ?? 1) - 1);
+          const newKiPct = ki.required_evidence_count
+            ? Math.min(100, Math.round((newKiCount / ki.required_evidence_count) * 100))
+            : 0;
+          await supabase
+            .from("key_indicators")
+            .update({ evidence_count: newKiCount, completion_percentage: newKiPct, status: getStatus(newKiPct) })
+            .eq("id", file.key_indicator_id);
+        }
+      }
+
+      // Update parent criterion count
       if (activeCriterion) {
         const newCount = Math.max(0, (activeCriterion.evidence_count ?? 1) - 1);
         const newPct = activeCriterion.required_evidence_count
@@ -211,11 +281,7 @@ export default function CriteriaTracker() {
           : 0;
         await supabase
           .from("criteria")
-          .update({
-            evidence_count: newCount,
-            completion_percentage: newPct,
-            status: getStatus(newPct),
-          })
+          .update({ evidence_count: newCount, completion_percentage: newPct, status: getStatus(newPct) })
           .eq("id", activeCriterion.id);
       }
     },
@@ -223,10 +289,9 @@ export default function CriteriaTracker() {
       toast.success("Evidence deleted");
       queryClient.invalidateQueries({ queryKey: ["evidence", activeCriterion?.id] });
       queryClient.invalidateQueries({ queryKey: ["criteria"] });
+      queryClient.invalidateQueries({ queryKey: ["key_indicators"] });
     },
-    onError: (err: any) => {
-      toast.error(`Delete failed: ${err.message}`);
-    },
+    onError: (err: any) => toast.error(`Delete failed: ${err.message}`),
   });
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -234,6 +299,18 @@ export default function CriteriaTracker() {
       uploadMutation.mutate(e.target.files);
       e.target.value = "";
     }
+  };
+
+  const handleKiFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0 && uploadingKiId) {
+      kiUploadMutation.mutate({ files: e.target.files, kiId: uploadingKiId });
+      e.target.value = "";
+    }
+  };
+
+  const triggerKiUpload = (kiId: string) => {
+    setUploadingKiId(kiId);
+    setTimeout(() => kiFileInputRef.current?.click(), 0);
   };
 
   if (criteriaLoading) {
@@ -344,6 +421,14 @@ export default function CriteriaTracker() {
                     className="hidden"
                     onChange={handleFileSelect}
                   />
+                  <input
+                    ref={kiFileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip"
+                    className="hidden"
+                    onChange={handleKiFileSelect}
+                  />
                   <Button
                     size="sm"
                     className="bg-primary text-primary-foreground gap-2"
@@ -444,9 +529,62 @@ export default function CriteriaTracker() {
                                   </span>
                                 </div>
                               </div>
-                              <p className="mt-3 text-xs text-muted-foreground">
-                                Upload evidence specifically for this key indicator to track detailed progress.
-                              </p>
+
+                              {/* Per-KI upload button */}
+                              {canEdit && (
+                                <Button
+                                  size="sm"
+                                  variant="outline"
+                                  className="mt-3 gap-2 text-xs"
+                                  onClick={() => triggerKiUpload(ki.id)}
+                                  disabled={kiUploadMutation.isPending && uploadingKiId === ki.id}
+                                >
+                                  {kiUploadMutation.isPending && uploadingKiId === ki.id ? (
+                                    <Loader2 className="h-3 w-3 animate-spin" />
+                                  ) : (
+                                    <Upload className="h-3 w-3" />
+                                  )}
+                                  Upload to {ki.indicator_code}
+                                </Button>
+                              )}
+
+                              {/* Per-KI evidence list */}
+                              {(() => {
+                                const kiFiles = getKiEvidence(ki.id);
+                                if (kiFiles.length === 0) return (
+                                  <p className="mt-2 text-xs text-muted-foreground italic">No evidence uploaded for this indicator yet.</p>
+                                );
+                                return (
+                                  <div className="mt-3 space-y-1.5">
+                                    {kiFiles.map((file: any) => (
+                                      <div key={file.id} className="flex items-center justify-between p-2 rounded-md bg-background/50 border border-border/50">
+                                        <div className="flex items-center gap-2 min-w-0">
+                                          <FileText className="h-3 w-3 text-primary shrink-0" />
+                                          <a
+                                            href={file.file_url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="text-xs font-medium text-foreground hover:text-primary truncate"
+                                          >
+                                            {file.file_name}
+                                          </a>
+                                        </div>
+                                        {canEdit && (
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                            onClick={() => deleteMutation.mutate(file.id)}
+                                            disabled={deleteMutation.isPending}
+                                          >
+                                            <Trash2 className="h-3 w-3" />
+                                          </Button>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                );
+                              })()}
                             </div>
                           </CollapsibleContent>
                         </div>
