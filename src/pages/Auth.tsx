@@ -52,7 +52,7 @@ export default function Auth() {
         animate={{ opacity: 1, y: 0 }}
         className="glass-card-glow w-full max-w-md p-8"
       >
-        <h1 className="font-heading text-2xl font-bold text-gradient-cyan mb-1">AccredAI</h1>
+        <h1 className="font-heading text-2xl font-bold text-gradient-cyan mb-1">Auto Scale AI</h1>
         <p className="text-sm text-muted-foreground mb-6">
           {mode === "login" && "Sign in to your account"}
           {mode === "signup" && "Create a new account"}

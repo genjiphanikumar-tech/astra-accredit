@@ -65,7 +65,7 @@ export default function ChatWidget() {
                   <Bot className="h-4 w-4 text-primary" />
                 </div>
                 <div>
-                  <p className="font-heading text-sm font-bold">AccredAI Assistant</p>
+                  <p className="font-heading text-sm font-bold">Auto Scale AI Assistant</p>
                   <p className="text-[10px] text-muted-foreground">NAAC Expert & App Guide</p>
                 </div>
               </div>
@@ -85,7 +85,7 @@ export default function ChatWidget() {
                 <div className="text-center py-8 space-y-3">
                   <Bot className="h-10 w-10 text-primary/30 mx-auto" />
                   <p className="text-sm text-muted-foreground">
-                    Hi! I'm your NAAC accreditation assistant. Ask me about criteria, evidence requirements, or how to use AccredAI.
+                    Hi! I'm your NAAC accreditation assistant. Ask me about criteria, evidence requirements, or how to use Auto Scale AI.
                   </p>
                   <div className="flex flex-wrap gap-2 justify-center">
                     {["What is Criterion 1?", "How to improve NAAC score?", "What evidence do I need?"].map((q) => (
