@@ -21,6 +21,7 @@ import SettingsPage from "./pages/SettingsPage";
 import ChatPage from "./pages/ChatPage";
 import ChatWidget from "./components/chat/ChatWidget";
 import NotFound from "./pages/NotFound";
+import Documentation from "./pages/Documentation";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
           <AnimatePresence mode="wait">
             <Routes>
               <Route path="/" element={<Landing />} />
+              <Route path="/docs" element={<Documentation />} />
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/dashboard" element={<ProtectedRoute><Dashboard /></ProtectedRoute>} />
