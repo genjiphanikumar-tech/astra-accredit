@@ -137,10 +137,24 @@
     transform: rotateY(180deg);
   }
 
-  .status-compliant { @apply bg-emerald-500/20 text-emerald-400 border-emerald-500/30; }
-  .status-partial { @apply bg-amber-500/20 text-amber-400 border-amber-500/30; }
-  .status-gap { @apply bg-red-500/20 text-red-400 border-red-500/30; }
-  .status-not-started { @apply bg-muted text-muted-foreground border-border; }
+  .status-compliant {
+    background: hsla(142, 76%, 50%, 0.2);
+    color: hsl(142, 76%, 60%);
+    border-color: hsla(142, 76%, 50%, 0.3);
+  }
+  .status-partial {
+    background: hsla(40, 100%, 55%, 0.2);
+    color: hsl(40, 100%, 60%);
+    border-color: hsla(40, 100%, 55%, 0.3);
+  }
+  .status-gap {
+    background: hsla(0, 84%, 60%, 0.2);
+    color: hsl(0, 84%, 65%);
+    border-color: hsla(0, 84%, 60%, 0.3);
+  }
+  .status-not-started {
+    @apply bg-muted text-muted-foreground border-border;
+  }
 }
 
 @layer utilities {
