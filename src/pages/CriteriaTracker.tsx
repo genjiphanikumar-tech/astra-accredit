@@ -508,6 +508,66 @@ export default function CriteriaTracker() {
           </motion.div>
         )}
       </div>
+
+      {/* Settings Dialog */}
+      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Configure Criterion</DialogTitle>
+            <DialogDescription>
+              Set the required evidence count for Criterion {activeCriterion?.criterion_number}.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="requiredCount">Required Evidence Count</Label>
+              <Input
+                id="requiredCount"
+                type="number"
+                min={1}
+                max={100}
+                value={requiredCount}
+                onChange={(e) => {
+                  setRequiredCount(e.target.value);
+                  setSettingsError("");
+                }}
+                placeholder="e.g., 10"
+              />
+              {settingsError && (
+                <p className="text-xs text-destructive">{settingsError}</p>
+              )}
+              <p className="text-xs text-muted-foreground">
+                The progress percentage will be calculated based on this target.
+              </p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSettingsOpen(false)}>
+              Cancel
+            </Button>
+            <Button
+              onClick={() => {
+                const parsed = requiredEvidenceSchema.safeParse(Number(requiredCount));
+                if (!parsed.success) {
+                  setSettingsError(parsed.error.errors[0]?.message || "Invalid value");
+                  return;
+                }
+                updateRequiredMutation.mutate(parsed.data);
+              }}
+              disabled={updateRequiredMutation.isPending}
+            >
+              {updateRequiredMutation.isPending ? (
+                <>
+                  <Loader2 className="h-3 w-3 animate-spin mr-2" />
+                  Saving...
+                </>
+              ) : (
+                "Save"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
