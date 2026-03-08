@@ -25,7 +25,7 @@ export default function Documentation() {
       <div className="max-w-4xl mx-auto p-8 print:p-0 print:max-w-none">
         {/* Cover */}
         <div className="text-center mb-12 print:mb-8 print:pt-12">
-          <h1 className="text-5xl font-bold text-primary mb-4 print:text-4xl">AccredAI</h1>
+          <h1 className="text-5xl font-bold text-primary mb-4 print:text-4xl">Autoscale AI</h1>
           <p className="text-2xl text-muted-foreground print:text-xl">
             AI-Powered NAAC Accreditation Management Platform
           </p>
@@ -37,10 +37,10 @@ export default function Documentation() {
         {/* Section 1 */}
         <section className="mb-10 print:mb-6">
           <h2 className="text-2xl font-bold text-primary border-b pb-2 mb-4 print:text-xl">
-            🎯 What is AccredAI?
+            🎯 What is Autoscale AI?
           </h2>
           <p className="text-foreground leading-relaxed">
-            AccredAI is an <strong>AI-powered NAAC Accreditation Management Platform</strong> designed 
+            Autoscale AI is an <strong>AI-powered NAAC Accreditation Management Platform</strong> designed 
             to help educational institutions prepare for and manage their NAAC (National Assessment 
             and Accreditation Council) accreditation process efficiently. It streamlines evidence 
             collection, gap analysis, task management, and report generation.
