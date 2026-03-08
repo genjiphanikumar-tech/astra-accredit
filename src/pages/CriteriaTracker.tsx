@@ -421,6 +421,14 @@ export default function CriteriaTracker() {
                     className="hidden"
                     onChange={handleFileSelect}
                   />
+                  <input
+                    ref={kiFileInputRef}
+                    type="file"
+                    multiple
+                    accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.jpg,.jpeg,.png,.zip"
+                    className="hidden"
+                    onChange={handleKiFileSelect}
+                  />
                   <Button
                     size="sm"
                     className="bg-primary text-primary-foreground gap-2"
