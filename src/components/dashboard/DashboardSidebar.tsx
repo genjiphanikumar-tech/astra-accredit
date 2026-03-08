@@ -33,7 +33,7 @@ export default function DashboardSidebar() {
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel className="font-heading text-xs tracking-wider">
-            {!collapsed && "Auto Scale AI"}
+            {!collapsed && "AccredAI"}
           </SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>

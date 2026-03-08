@@ -43,7 +43,7 @@ export default function InstitutionSetup() {
       className="max-w-lg mx-auto mt-12"
     >
       <div className="glass-card-glow p-8">
-        <h2 className="font-heading text-xl font-bold mb-2">Welcome to Auto Scale AI</h2>
+        <h2 className="font-heading text-xl font-bold mb-2">Welcome to AccredAI</h2>
         <p className="text-sm text-muted-foreground mb-6">
           Set up your institution to get started with NAAC accreditation tracking.
         </p>
